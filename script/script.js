@@ -5,6 +5,16 @@ $(document).keydown(function (event) {
     }
 });
 
+function getUrlParam(name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+    var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+    if (r != null) return unescape(r[2]); return null; //返回参数值
+}
+function getUrlParam2(name) {
+    var paramsArr = window.location.href.split('/');  //匹配目标参数
+    return paramsArr[paramsArr.length - 1]; //返回参数值
+}
+
 function init() {
     if (!window.localStorage) {
         console.log('浏览器版本太低，不支持缓存技术，所以无法指定演出时间进行购票，将默认选择第一个演出时间进行购票')
@@ -61,19 +71,22 @@ function grab() {
 // 指定演出时间刷票
 function cacheGrab() {
     let newButton = null
-    let showTimeIndex = getItem('showTimeIndex')
+    let pageId = getUrlParam2()
+    let showTimeInfo = getItem('showTimeInfo')
     let showTimeList = $('.choiceTime').eq(0).find('span')
-    if (showTimeIndex && showTimeIndex > 0 && showTimeList.length >= showTimeIndex) {
-        showTimeList.eq(showTimeIndex - 1).click()
+    if (pageId === showTimeInfo.id && showTimeInfo.index && showTimeInfo.index > 0 && showTimeList.length >= showTimeInfo.index) {
+        showTimeList.eq(showTimeInfo.index - 1).click()
         grab()
     } else {
-        removeItem('showTimeIndex')
+        removeItem('showTimeInfo')
         let style = buttonStyle()
         newButton = $('<button class="buy-btn2 cur-hand" style="' + style + '">开始刷票,可按ESC退出键，终止刷票</button>')
         $('.submitState').append(newButton)
         newButton.bind('click', function () {
-            showTimeIndex = $('.choiceTime').eq(0).find('.active').index()
-            setItem('showTimeIndex', showTimeIndex + 1)
+            setItem('showTimeInfo', {
+                id: pageId,
+                index: $('.choiceTime').eq(0).find('.active').index() + 1
+            })
             grab()
         })
     }
